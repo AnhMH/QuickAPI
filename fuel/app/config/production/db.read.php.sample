@@ -1,0 +1,14 @@
+<?php
+
+$dbReadConf = array(
+    'db_read' => array(
+        // Set one
+        //'use' => 'replica1',
+        
+        // Or more
+        'use' => array(
+            'replica1',
+            //'replica2'
+        ),
+    )
+);
