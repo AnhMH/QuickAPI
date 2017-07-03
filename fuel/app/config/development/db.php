@@ -6,9 +6,9 @@
 return array(
     'default' => array(
         'connection' => array(
-            'dsn' => 'mysql:host=localhost:3306;dbname=baroque',
+            'dsn' => 'mysql:host=localhost:3306;dbname=vcc_quick',
             'username' => 'root',
-            'password' => 'root',
+            'password' => '',
         ),
         'timezone' => '+9:00',
     ),

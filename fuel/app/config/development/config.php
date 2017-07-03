@@ -11,7 +11,7 @@ $envConf = array(
         'app_id' => '',
         'app_secret' => '',
     ),
-    'api_check_security' => true,
+    'api_check_security' => false,
     'api_request_minute' => 24 * 60,
 );
 

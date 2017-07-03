@@ -11,7 +11,7 @@ namespace Bus;
  * @author AnhMH
  * @copyright Oceanize INC
  */
-class Versions_Check extends BusAbstract {
+class Versions_CheckNew extends BusAbstract {
 
     public function operateDB($data) {
         try {

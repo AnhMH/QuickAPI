@@ -328,16 +328,18 @@ return array(
     
     'authorize' => true,
     'unauthorize_url' => array(
-        'versions/check'
+        'versions/checkNew',
+        'users/login'
     ),
     'admin_authorize_url' => array(),
     'unauthorize_basic_token_url' => array(
-        'versions/check'
+        'versions/checkNew'
     ),
     
     'api_check_security' => true,
     'api_secret_key' => 'quick',
     'api_request_minute' => 10,// Minute
+    'api_token_expire' => time() + 30 * 24 * 60 * 60, // 30 days
     'os' => array(
         'webos' => 'webos',
         'ios' => 'ios',

@@ -1,3 +1,10 @@
-/fuel/vendor/
-/nbproject/private/
+
+/nbproject/
+
 /fuel/app/config/development/
+
+# logs
+/fuel/app/tmp
+/fuel/app/cache
+/fuel/app/logs/
+/fuel/app/logs_bk/
