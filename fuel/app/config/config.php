@@ -322,9 +322,6 @@ return array(
     'log_date_format' => 'Y-m-d H:i:s',
     'log_path_bk' => APPPATH . 'logs_bk/',
     'log_bk_after' => 'y',
-    'thumbs' => array(
-        'places' => array('200x200')
-    ),
     'image_ext' => array('jpeg', 'jpg', 'gif', 'png'),
     'video_ext' => array('mp4', 'flv'),
     'time_batch' => 2 * 60,
@@ -339,7 +336,7 @@ return array(
     ),
     
     'api_check_security' => true,
-    'api_secret_key' => 'baroque',
+    'api_secret_key' => 'quick',
     'api_request_minute' => 10,// Minute
     'os' => array(
         'webos' => 'webos',

@@ -12,6 +12,7 @@ $envConf = array(
         'app_secret' => '',
     ),
     'api_check_security' => true,
+    'api_request_minute' => 24 * 60,
 );
 
 if (isset($_SERVER['SERVER_NAME'])) {
