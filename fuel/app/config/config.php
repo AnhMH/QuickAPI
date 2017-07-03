@@ -344,4 +344,8 @@ return array(
         'android' => 'android',
     ),
     'page_size' => 10,
+    'app_store_url' => array(
+        'ios' => '',
+        'android' => ''
+    ),
 );

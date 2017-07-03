@@ -571,5 +571,14 @@ class Util {
         }
         return $files;
     }
+    
+    /**
+     * Get version code
+     * @return int
+     */
+    public static function getVersionCode() {
+        $versionApp   = !empty(Input::headers('Version')) && is_numeric(Input::headers('Version')) ? intval(Input::headers('Version')) : 0;
+        return $versionApp;
+    }
 
 }

@@ -14,8 +14,8 @@ class Controller_Versions extends \Controller_App {
     /**
      * Check current version for updating app
      */
-    public function action_check() {
-        return \Bus\Versions_Check::getInstance()->execute();
+    public function action_checkNew() {
+        return \Bus\Versions_CheckNew::getInstance()->execute();
     }
 
 }

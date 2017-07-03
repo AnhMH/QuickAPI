@@ -3,19 +3,19 @@
 namespace Bus;
 
 /**
- * Add and update info for User
+ * Check version code
  *
  * @package Bus
- * @created 2016-07-06
+ * @created 2017-07-03
  * @version 1.0
- * @author KienNH
+ * @author AnhMH
  * @copyright Oceanize INC
  */
 class Versions_Check extends BusAbstract {
 
     public function operateDB($data) {
         try {
-            $this->_response = \Model_Version::check($data);
+            $this->_response = \Model_Version::checkNew($data);
             return $this->result(\Model_Version::error());
         } catch (\Exception $e) {
             $this->_exception = $e;

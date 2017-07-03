@@ -1,10 +1,16 @@
 <?php
 $envConf = array(
-	'img_url' => 'http://localhost/',
-    'fe_url' => 'http://localhost/',
-	'adm_url' => 'http://localhost/',
+    'img_url' => 'http://localhost/',
     'send_email' => true,
-    'test_email' => '', // will send to this email for testing   
+    'test_email' => '', // will send to this email for testing  
+    'twitter' => array(
+        'key' => '',
+        'secret' => ''
+    ),
+    'facebook' => array(
+        'app_id' => '',
+        'app_secret' => '',
+    ),
     'api_check_security' => true,
     'api_request_minute' => 24 * 60,
 );
