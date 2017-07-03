@@ -1,6 +1,6 @@
 <?php
 $envConf = array(
-    'img_url' => 'http://localhost/',
+    'img_url' => 'http://img.quick.localhost/',
     'send_email' => true,
     'test_email' => '', // will send to this email for testing  
     'twitter' => array(

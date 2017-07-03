@@ -329,7 +329,8 @@ return array(
     'authorize' => true,
     'unauthorize_url' => array(
         'versions/checkNew',
-        'users/login'
+        'users/login',
+        'users/register'
     ),
     'admin_authorize_url' => array(),
     'unauthorize_basic_token_url' => array(

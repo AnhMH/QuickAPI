@@ -1,8 +1,7 @@
 <?php 
-return array(	
-	'upload_dir' => '/var/www/upload/',
-	'img_dir' => '/var/www/img/',
-	'path' => '/var/www/img/' . date('Y/m/d') . '/',
+return array (
+	'img_dir' => 'C:/xampp/htdocs/vcc/quick/img/',
+	'path' => 'C:/xampp/htdocs/vcc/quick/img/' . date('Y/m/d') . '/',
 	'auto_process' => false,
 	'normalize' => true,
 	'change_case' => 'lower',

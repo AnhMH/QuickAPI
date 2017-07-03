@@ -45,7 +45,7 @@ class Model_User extends Model_Abstract
     /**
      * Login User
      *
-     * @author thailh
+     * @author AnhMH
      * @param array $param Input data
      * @return array|bool Detail User or false if error
      */
@@ -82,6 +82,73 @@ class Model_User extends Model_Abstract
             return false;
         }
         static::errorOther(static::ERROR_CODE_AUTH_ERROR, 'Email/Password');
+        return false;
+    }
+    
+    /**
+     * Add/Update User Info
+     *
+     * @author AnhMH
+     * @param array $param Input data
+     * @return array|bool Detail User or false if error
+     */
+    public static function add_update($param)
+    {
+        $is_new = false;
+        $id = !empty($param['id']) ? $param['id'] : 0;
+        // check exist
+        if (!empty($id)) {
+            $user = self::find($id);
+            if (empty($user)) {
+                self::errorNotExist('user_id');
+                return false;
+            }
+        } else {
+            //check email if exist
+            $option['where'] = array(
+                'email' => $param['email']
+            );
+            $checkUserExist = self::find('first', $option);
+            if (!empty($checkUserExist)) {
+                \LogLib::info('Duplicate email in users', __METHOD__, $param);
+                self::errorDuplicate('email', $param['email']);
+                return false;
+            }
+            $is_new = true;
+            $user = new self;
+        }
+        
+        // Upload image
+        if (!empty($_FILES)) {
+            $uploadResult = \Lib\Util::uploadImage(); 
+            if ($uploadResult['status'] != 200) {
+                self::setError($uploadResult['error']);
+                return false;
+            }
+            $param['image_path'] = $uploadResult['body'];
+        }
+        
+        // set value
+        $user->set('email', $param['email']);
+        if (!empty($param['password'])) {
+            $user->set('password', Lib\Util::encodePassword($param['password'], $param['email']));
+        }
+        if (isset($param['name'])) {
+            $user->set('name', $param['name']);
+        }
+        if (isset($param['image_path'])) {
+            $user->set('image_path', $param['image_path']);
+        }
+        if (isset($param['description'])) {
+            $user->set('description', $param['description']);
+        }
+        // save to database
+        if ($user->save()) {
+            if (empty($user->id)) {
+                $user->id = self::cached_object($user)->_original['id'];
+            }
+            return !empty($user->id) ? $user->id : 0;
+        }
         return false;
     }
 }

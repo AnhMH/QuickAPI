@@ -20,4 +20,14 @@ class Controller_Users extends \Controller_App
     {
         return \Bus\Users_Login::getInstance()->execute();
     }
+    
+    /**
+     * Register User
+     *
+     * @return boolean
+     */
+    public function action_register()
+    {
+        return \Bus\Users_Register::getInstance()->execute();
+    }
 }
