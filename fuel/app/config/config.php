@@ -330,6 +330,7 @@ return array(
     'unauthorize_url' => array(
         'versions/checkNew',
         'users/login',
+        'users/facebooklogin',
         'users/register'
     ),
     'admin_authorize_url' => array(),

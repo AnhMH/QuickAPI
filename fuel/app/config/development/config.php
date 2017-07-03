@@ -8,8 +8,8 @@ $envConf = array(
         'secret' => ''
     ),
     'facebook' => array(
-        'app_id' => '',
-        'app_secret' => '',
+        'app_id' => '145671709338491',
+        'app_secret' => 'f72e15e23688a11dd707ab50f705370c',
     ),
     'api_check_security' => false,
     'api_request_minute' => 24 * 60,

@@ -30,4 +30,14 @@ class Controller_Users extends \Controller_App
     {
         return \Bus\Users_Register::getInstance()->execute();
     }
+    
+    /**
+     * Facebook Login
+     *
+     * @return boolean
+     */
+    public function action_facebooklogin()
+    {
+        return \Bus\Users_FacebookLogin::getInstance()->execute();
+    }
 }

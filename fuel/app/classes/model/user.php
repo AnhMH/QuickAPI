@@ -49,26 +49,22 @@ class Model_User extends Model_Abstract
      * @param array $param Input data
      * @return array|bool Detail User or false if error
      */
-    public static function get_login($param, $noCheckPassword = false)
+    public static function get_login($param)
     {
         \LogLib::info('Login', __METHOD__, $param);
-        $query = DB::select(
-                self::$_table_name.'.id',
-                self::$_table_name.'.name',
-                self::$_table_name.'.email',
-                self::$_table_name.'.description',
-                self::$_table_name.'.image_path',
-                self::$_table_name.'.is_mail_check'
+        $login = array();
+        $user = self::find('first', array(
+            'where' => array(
+                'email' => $param['email'],
+                'password' => Lib\Util::encodePassword($param['password'], $param['email'])
             )
-            ->from(self::$_table_name)
-            ->where(self::$_table_name . '.email', $param['email'])
-        ;
+        ));
         
-        if ($noCheckPassword === false) {
-            $query->where(self::$_table_name . '.password', Lib\Util::encodePassword($param['password'], $param['email']));
+        if (!empty($user['id'])) {
+            $login = self::get_profile(array(
+                'user_id' => $user['id']
+            ));
         }
-        
-        $login = $query->group_by(self::$_table_name . '.id')->execute()->offsetGet(0);
         
         if ($login) {
             if (empty($login['disable'])) {
@@ -83,6 +79,36 @@ class Model_User extends Model_Abstract
         }
         static::errorOther(static::ERROR_CODE_AUTH_ERROR, 'Email/Password');
         return false;
+    }
+    
+    /**
+     * Get profile
+     *
+     * @author AnhMH
+     * @param array $param Input data
+     * @return array|bool Detail User or false if error
+     */
+    public static function get_profile($param)
+    {
+        if (empty($param['user_id'])) {
+            return false;
+        }
+        
+        $query = DB::select(
+                self::$_table_name.'.id',
+                self::$_table_name.'.name',
+                self::$_table_name.'.email',
+                self::$_table_name.'.description',
+                self::$_table_name.'.image_path',
+                self::$_table_name.'.is_mail_check'
+            )
+            ->from(self::$_table_name)
+            ->where(self::$_table_name . '.id', $param['user_id'])
+        ;
+        
+        $data = $query->execute()->offsetGet(0);
+        
+        return $data;
     }
     
     /**
@@ -130,6 +156,9 @@ class Model_User extends Model_Abstract
         
         // set value
         $user->set('email', $param['email']);
+        if (empty($param['password']) && $is_new) {
+            $param['password'] = Lib\Str::generate_password();
+        }
         if (!empty($param['password'])) {
             $user->set('password', Lib\Util::encodePassword($param['password'], $param['email']));
         }
@@ -149,6 +178,143 @@ class Model_User extends Model_Abstract
             }
             return !empty($user->id) ? $user->id : 0;
         }
+        return false;
+    }
+    
+    /**
+     * Login facebook by token.
+     *
+     * @author AnhMH
+     * @param array $param Input data.
+     * @return bool Returns the boolean.
+     */
+    public static function login_facebook_by_token($param)
+    {
+        @session_start();
+        try {
+            //\LogLib::info('test fblogim- Get token from cookie', __METHOD__, array(\Config::get('facebook.app_id'), \Config::get('facebook.app_secret')));
+            FacebookSession::setDefaultApplication(\Config::get('facebook.app_id'), \Config::get('facebook.app_secret'));
+            \LogLib::info('login_facebook_by_token - Get token from cookie', __METHOD__, $param);
+            $session = new FacebookSession($param['token']);
+            if (isset($session)) {
+                \LogLib::info('login_facebook_by_token - Session is OK', __METHOD__, $param);
+                $request = new FacebookRequest($session, 'GET', '/me');
+                $response = $request->execute();
+                $facebookInfo = (array)$response->getResponse();
+                if (!empty($facebookInfo)) {
+                    \LogLib::info('login_facebook_by_token - call login_facebook', __METHOD__, $facebookInfo);
+                    $loginInfo = self::login_facebook($facebookInfo, $param);
+                    $loginInfo['fb_token'] = $param['token'];
+                    return $loginInfo;
+                }
+            } else {
+                \LogLib::info('login_facebook_by_token - Session is not OK', __METHOD__, $param);
+                return false;
+            }
+        } catch (FacebookRequestException $ex) {
+            // When Facebook returns an error
+            \LogLib::warning($ex->getRawResponse(), __METHOD__, $param);
+            static::errorOther(self::ERROR_CODE_OTHER_1, '', $ex->getRawResponse());
+            return false;
+        } catch (\Exception $ex) {
+            // When validation fails or other local issues
+            \LogLib::warning($ex->getMessage(), __METHOD__, $param);
+            static::errorOther(self::ERROR_CODE_OTHER_2, '', $ex->getMessage());
+            return false;
+        }
+        \LogLib::info('login_facebook_by_token - There is no token from cookie', __METHOD__, $param);
+        return false;
+    }
+    
+    /**
+     * Login facebook
+     *
+     * @author AnhMH
+     * @param array $facebookInfo Input data.
+     * @return bool Returns the boolean.
+     */
+    public static function login_facebook($facebookInfo, $param = array())
+    {
+        if (empty($facebookInfo['email']) && empty($facebookInfo['id'])) {
+            self::errorNotExist('facebook_id_and_email');
+            return false;
+        }
+        $param['facebook_birthday'] = isset($facebookInfo['birthday']) ? $facebookInfo['birthday'] : '';
+        $param['facebook_email'] = isset($facebookInfo['email']) ? $facebookInfo['email'] : '';
+        $param['facebook_id'] = isset($facebookInfo['id']) ? $facebookInfo['id'] : '';
+        $param['facebook_name'] = isset($facebookInfo['name']) ? $facebookInfo['name'] : '';
+        $param['facebook_first_name'] = isset($facebookInfo['first_name']) ? $facebookInfo['first_name'] : '';
+        $param['facebook_last_name'] = isset($facebookInfo['last_name']) ? $facebookInfo['last_name'] : '';
+        $param['facebook_username'] = isset($facebookInfo['username']) ? $facebookInfo['username'] : '';
+        $param['facebook_gender'] = isset($facebookInfo['gender']) ? $facebookInfo['gender'] : '';
+        $param['facebook_link'] = isset($facebookInfo['link']) ? $facebookInfo['link'] : '';
+        $param['facebook_image'] = "http://graph.facebook.com/{$param['facebook_id']}/picture?type=large";
+        $param['os'] = isset($facebookInfo['os']) ? $facebookInfo['os'] : '';
+        if (!empty($param['facebook_id'])) {
+            $facebook = Model_User_Facebook_Information::get_detail(array(
+                    'facebook_id' => $param['facebook_id'],
+                    'disable'     => 0
+                )
+            );
+        }
+        if (!empty($facebook['facebook_id']) && $facebook['facebook_id'] != $param['facebook_id']) {
+            if (Model_User_Facebook_Information::add_update(array(
+                'id'          => $facebook['id'],
+                'facebook_id' => $param['facebook_id'],
+            ))
+            ) {
+                $facebook['facebook_id'] = $param['facebook_id'];
+                \LogLib::info('Update facebook_id', __METHOD__, $param);
+            }
+        }
+
+        $isNewUser = false; //use to differ first new login facebook or not
+        if (!empty($facebook['user_id']) && !empty($facebook['facebook_id'])) {
+            \LogLib::info('User used to login with facebook', __METHOD__, $facebook);
+            $userId = $facebook['user_id'];
+        } elseif (!empty($facebook['user_id']) && empty($facebook['facebook_id'])) {
+            \LogLib::info('User used to login without facebook', __METHOD__, $facebook);
+            $param['user_id'] = $facebook['user_id'];
+            if (Model_User_Facebook_Information::add_update($param)) {
+                \LogLib::info('Update facebook info', __METHOD__, $param);
+                $userId = $facebook['user_id'];
+            }
+        } else {
+            $isNewUser = true;
+            \LogLib::info('First login using facebook', __METHOD__, $param);
+            $param['email'] = $param['facebook_email'];
+            // AnhMH 2016/06/21 Check dulicate email.
+            if (!empty($param['email'])) {
+                $option['where'] = array(
+                    'email' => $param['email']
+                );
+                $checkEmailDulicate = self::find('first', $option);
+                if (!empty($checkEmailDulicate)) {
+                    \LogLib::info('Duplicate email in users', __METHOD__, $param);
+                    self::errorDuplicate('email', $param['email']);
+                    return false;
+                }
+            }
+            // End.
+            $param['password'] = '';
+            $param['name'] = $param['facebook_name'];
+            $param['image_path'] = $param['facebook_image'];
+            $userId = self::add_update($param);
+            if ($userId > 0) {
+                // Add user_facebook_information
+                $param['user_id'] = $userId;
+                if (Model_User_Facebook_Information::add_update($param)) {
+                    \LogLib::info('Add facebook info', __METHOD__, $param);
+                }
+            }
+        }
+        if (!empty($userId)) {
+            \LogLib::info('Return user info', __METHOD__, $param);
+            $data = self::get_profile(array('user_id' => $userId));  
+            return $data;
+        }
+        \LogLib::info('User info unavailable', __METHOD__, $param);
+        self::errorNotExist('fb_user_information');
         return false;
     }
 }
