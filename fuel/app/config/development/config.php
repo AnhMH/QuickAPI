@@ -4,8 +4,8 @@ $envConf = array(
     'send_email' => true,
     'test_email' => '', // will send to this email for testing  
     'twitter' => array(
-        'key' => '',
-        'secret' => ''
+        'key' => 'diXip9KkGrJ0QGhRaxXMNtPve',
+        'secret' => 'ugZG8bPb2oiDZMPU6XbdvLozCy5Di4ZYZCaKEsxHJWzyhroljk'
     ),
     'facebook' => array(
         'app_id' => '145671709338491',

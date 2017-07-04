@@ -331,6 +331,7 @@ return array(
         'versions/checkNew',
         'users/login',
         'users/facebooklogin',
+        'users/twitterlogin',
         'users/register'
     ),
     'admin_authorize_url' => array(),

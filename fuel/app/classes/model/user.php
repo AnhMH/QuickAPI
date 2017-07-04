@@ -317,4 +317,129 @@ class Model_User extends Model_Abstract
         self::errorNotExist('fb_user_information');
         return false;
     }
+    
+    /**
+     * Login Twitter by token.
+     *
+     * @author caolp
+     * @param array $param Input data.
+     * @return bool Returns the boolean.
+     */
+    public static function login_twitter_by_token($param)
+    {
+        @session_start();
+        try {
+            $twitter = \Social\Twitter::forge($param['oauth_token'], $param['oauth_token_secret']);
+            \LogLib::info('login_twitter_by_token - Get info', __METHOD__, $param);
+            if ($twitter) {
+                \LogLib::info('login_twitter_by_token - Session is OK', __METHOD__);
+                $twitterInfo = $twitter->get('account/verify_credentials', array(
+                    'include_email' => 'true' // Get email
+                ));
+                if (!empty($twitterInfo)) {
+                    \LogLib::info('login_twitter_by_token - call login_twitter', __METHOD__, $twitterInfo);
+                    $loginInfo = self::login_twitter($twitterInfo, $param);
+                    $loginInfo['oauth_token'] = $param['oauth_token'];
+                    $loginInfo['oauth_token_secret'] = $param['oauth_token_secret'];
+                    return $loginInfo;
+                }
+            } else {
+                \LogLib::info('login_twitter_by_token - Session is not OK', __METHOD__, $param);
+                return false;
+            }
+        } catch (FacebookRequestException $ex) {
+            // When Facebook returns an error
+            \LogLib::warning($ex->getRawResponse(), __METHOD__, $param);
+            static::errorOther(self::ERROR_CODE_OTHER_1, '', $ex->getRawResponse());
+            return false;
+        } catch (\Exception $ex) {
+            // When validation fails or other local issues
+            \LogLib::warning($ex->getMessage(), __METHOD__, $param);
+            static::errorOther(self::ERROR_CODE_OTHER_2, '', $ex->getMessage());
+            return false;
+        }
+        \LogLib::info('login_twitter_by_token - There is no token from cookie', __METHOD__, $param);
+        return false;
+    }
+    
+    /**
+     * Login Twitter
+     *
+     * @author AnhMH
+     * @param array $twitterInfo Input data.
+     * @return bool Returns the boolean.
+     */
+    public static function login_twitter($twitterInfo, $param = array())
+    {
+        if (empty($twitterInfo->id)) {
+            self::errorNotExist('twitter_id');
+            return false;
+        }
+        $param['tw_id'] = isset($twitterInfo->id) ? $twitterInfo->id : '';
+        $param['tw_name'] = isset($twitterInfo->name) ? $twitterInfo->name : '';
+        $param['tw_screen_name'] = isset($twitterInfo->screen_name) ? $twitterInfo->screen_name : '';
+        $param['tw_description'] = isset($twitterInfo->description) ? $twitterInfo->description : '';
+        $param['tw_url'] = isset($twitterInfo->url) ? $twitterInfo->url : '';
+        $param['tw_lang'] = isset($twitterInfo->lang) ? $twitterInfo->lang : '';
+        $param['tw_profile_image_url'] = isset($twitterInfo->profile_image_url) ? $twitterInfo->profile_image_url : '';
+        $param['tw_profile_image_url_https'] = isset($twitterInfo->profile_image_url_https) ? $twitterInfo->profile_image_url_https : '';
+
+        if (!empty($param['tw_id'])) {
+            $twitter = Model_User_Twitter_Information::get_detail(array(
+                    'tw_id'   => $param['tw_id'],
+                    'disable' => 0
+                )
+            );
+        }
+        $isNewUser = false; //use to differ first new login twitter or not
+        if (!empty($twitter['user_id']) && !empty($twitter['tw_id'])) {
+            $userId = $twitter['user_id'];
+        } elseif (!empty($twitter['user_id']) && empty($twitter['tw_id'])) {
+            $param['user_id'] = $twitter['user_id'];
+            if (Model_User_Twitter_Information::add_update($param)) {
+                $userId = $twitter['user_id'];
+            }
+        } else {
+            $isNewUser = true;
+            $param['email'] = isset($twitterInfo->email) ? $twitterInfo->email : '';
+            // AnhMH 2016/06/21 Check dulicate email.
+            if (!empty($param['email'])) {
+                $option['where'] = array(
+                    'email' => $param['email']
+                );
+                $checkEmailDulicate = self::find('first', $option);
+                if (!empty($checkEmailDulicate)) {
+                    \LogLib::info('Duplicate email in users', __METHOD__, $param);
+                    self::errorDuplicate('email', $param['email']);
+                    return false;
+                }
+            }
+            // End.
+            $param['password'] = '';
+            $param['name'] = $param['tw_name'];
+            $param['image_path'] = $param['tw_profile_image_url'];
+            $userId = Model_User::add_update($param);
+            if ($userId > 0) {
+                // Add user_twitter_information
+                $param['user_id'] = $userId;
+                if (Model_User_Twitter_Information::add_update($param)) {
+                    \LogLib::info('Add twitter info', __METHOD__);
+                }
+            }
+        }
+        if (!empty($userId)) {
+            \LogLib::info('Return user info', __METHOD__);
+            $data = self::get_profile(array(
+                'user_id' => $userId
+            ));  
+            if (!empty($data)) {
+                $data['is_new_user'] = $isNewUser;
+                return $data;
+            }
+        }
+        \LogLib::info('User info unavailable', __METHOD__, $param);
+        self::errorNotExist('tw_user_information');
+        return false;
+    }
+    
 }

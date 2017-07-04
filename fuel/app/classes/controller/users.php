@@ -32,12 +32,22 @@ class Controller_Users extends \Controller_App
     }
     
     /**
-     * Facebook Login
+     * User login via Facebook Token
      *
      * @return boolean
      */
     public function action_facebooklogin()
     {
         return \Bus\Users_FacebookLogin::getInstance()->execute();
+    }
+    
+    /**
+     * User login via Twitter Token
+     *
+     * @return boolean
+     */
+    public function action_twitterlogin()
+    {
+        return \Bus\Users_TwitterLogin::getInstance()->execute();
     }
 }
